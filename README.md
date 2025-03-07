@@ -87,12 +87,6 @@ The AI Chatbot SaaS platform allows businesses to purchase and deploy customized
 - **Backend Developer** (Flask, API Development, Database Management)
 - **Frontend Developer** (React, UI/UX)
 - **AI/NLP Engineer** (Chatbot Training & Optimization)
-- **Marketing & Sales Team** (Customer Acquisition)
-
-### **4.3 Financial Resources**
-- **Server Costs:** $50-$200/month (depending on usage).
-- **Marketing Budget:** $500-$2000 for initial campaigns.
-- **Payment Gateway Fees:** 2.9% + $0.30 per transaction (Stripe/PayPal).
 
 ## **5. Conclusion**
 This AI Chatbot SaaS platform has the potential to provide businesses with an automated customer support solution while generating a recurring revenue model through subscriptions. By ensuring security, scalability, and ease of integration, we can create a robust and profitable service.
