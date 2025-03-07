@@ -87,6 +87,7 @@ The AI Chatbot SaaS platform allows businesses to purchase and deploy customized
 - **Backend Developer** (Flask, API Development, Database Management)
 - **Frontend Developer** (React, UI/UX)
 - **AI/NLP Engineer** (Chatbot Training & Optimization)
+- **DevOps Engineer** (Deploy, manage workflows & containerization)
 
 ## **5. Conclusion**
 This AI Chatbot SaaS platform has the potential to provide businesses with an automated customer support solution while generating a recurring revenue model through subscriptions. By ensuring security, scalability, and ease of integration, we can create a robust and profitable service.
