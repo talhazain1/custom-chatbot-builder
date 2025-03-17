@@ -3,22 +3,178 @@
 <head>
   <meta charset="UTF-8">
   <title>Test Chatbot</title>
-  <link rel="stylesheet" type="text/css" href="style.css">
   <style>
-    .container { max-width: 800px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 5px; }
-    h1 { margin-top: 0; }
-    form label { display: block; margin-top: 10px; }
-    form input, form textarea { width: 100%; padding: 8px; margin-top: 5px; }
-    form button { margin-top: 15px; }
-    pre { background: #e9ecef; padding: 10px; border-radius: 4px; overflow-x: auto; }
-  </style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Arial', sans-serif;
+    }
+
+    body {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        min-height: 100vh;
+        color: #333;
+    }
+
+    nav {
+        background-color: white;
+        padding: 1rem 5%;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+    }
+
+    nav ul {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        list-style: none;
+    }
+
+    nav ul li a {
+        text-decoration: none;
+        color: #333;
+        font-weight: bold;
+        transition: color 0.3s ease;
+    }
+
+    nav ul li a:hover {
+        color: #6366f1;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 100px auto 40px;
+        padding: 2rem;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    }
+
+    h1, h2 {
+        color: #6366f1;
+        margin-bottom: 1.5rem;
+    }
+
+    h1 {
+        font-size: 2.5rem;
+        text-align: center;
+    }
+
+    form {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    form label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #333;
+        font-weight: bold;
+    }
+
+    form input, 
+    form textarea {
+        width: 100%;
+        padding: 0.8rem;
+        margin-bottom: 1.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    form input:focus,
+    form textarea:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    button {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        font-size: 1rem;
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    button:active {
+        transform: translateY(0);
+    }
+
+    pre {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin-top: 1.5rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    pre:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 768px) {
+        nav ul {
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .container {
+            margin: 80px 20px 40px;
+            padding: 1.5rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+        }
+
+        form {
+            padding: 1.5rem;
+        }
+    }
+</style>
 </head>
 <body>
-  <!-- Navigation Bar -->
+
   <nav>
     <ul>
       <li><a href="index.html">Home</a></li>
+      <li><a href="register.html">Register</a></li>
+      <li><a href="login.html">Login</a></li>
+      <li><a href="profile.html">Profile</a></li>
       <li><a href="chatbot_builder.html">Chatbot Builder</a></li>
+      <li><a href="admin.html">Admin</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
       <li><a href="inference.html">Test Chatbot</a></li>
     </ul>
   </nav>
