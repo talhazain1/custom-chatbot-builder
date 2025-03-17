@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Register</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+  <nav>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="register.html">Register</a></li>
+      <li><a href="login.html">Login</a></li>
+      <li><a href="profile.html">Profile</a></li>
+      <li><a href="chatbot_builder.html">Chatbot Builder</a></li>
+      <li><a href="admin.html">Admin</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="inference.html">Test Chatbot</a></li>
+    </ul>
+  </nav>
+  <div class="container">
+    <h1>Register</h1>
+    <form id="registerForm">
+      <label for="userName">Name:</label><br>
+      <input type="text" id="userName" required><br><br>
+      <label for="userEmail">Email:</label><br>
+      <input type="email" id="userEmail" required><br><br>
+      <label for="password">Password:</label><br>
+      <input type="password" id="password" required><br><br>
+      <label for="companyName">Company Name:</label><br>
+      <input type="text" id="companyName" required><br><br>
+      <button type="submit">Register</button>
+    </form>
+    <pre id="result"></pre>
+  </div>
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const userName = document.getElementById('userName').value;
+      const userEmail = document.getElementById('userEmail').value;
+      const password = document.getElementById('password').value;
+      const companyName = document.getElementById('companyName').value;
+      try {
+        const response = await fetch('/api/users/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_name: userName, user_email: userEmail, password: password, company_name: companyName })
+        });
+        const data = await response.json();
+        document.getElementById('result').innerText = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById('result').innerText = err;
+      }
+    });
+  </script>
+</body>
+</html>

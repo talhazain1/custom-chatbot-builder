@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Chatbot Builder</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <style>
+    .container { max-width: 800px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 5px; }
+    .hidden { display: none; }
+    nav ul { display: flex; list-style: none; padding: 0; }
+    nav ul li { margin: 0 10px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="register.html">Register</a></li>
+      <li><a href="login.html">Login</a></li>
+      <li><a href="profile.html">Profile</a></li>
+      <li><a href="chatbot_builder.html">Chatbot Builder</a></li>
+      <li><a href="admin.html">Admin</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <h1>Chatbot Builder</h1>
+    <!-- Create Form -->
+    <div id="createFormDiv">
+      <h2>Create Chatbot</h2>
+      <form id="createChatbotForm" enctype="multipart/form-data">
+        <!-- company_id is taken from logged-in user so it's hidden -->
+        <input type="hidden" id="companyId" name="company_id">
+        
+        <label for="purpose">Purpose:</label><br>
+        <input type="text" id="purpose" name="purpose" required><br><br>
+        
+        <label for="goal">Goal:</label><br>
+        <input type="text" id="goal" name="goal" required><br><br>
+        
+        <label for="role">Role:</label><br>
+        <input type="text" id="role" name="role" required><br><br>
+        
+        <label for="configuration">Configuration (JSON):</label><br>
+        <textarea id="configuration" name="configuration" rows="4" cols="50">{ "custom_setting": "value" }</textarea><br><br>
+        
+        <label for="paymentPlan">Payment Plan:</label><br>
+        <select id="paymentPlan" name="payment_plan">
+          <option value="free_trial">Free Trial</option>
+          <option value="basic">Basic</option>
+          <option value="pro">Pro</option>
+          <option value="enterprise">Enterprise</option>
+        </select><br><br>
+        
+        <label for="knowledgeBase">Knowledge Base (Text - JSON format):</label><br>
+        <textarea id="knowledgeBase" name="knowledge_base" rows="10" cols="50"></textarea><br><br>
+        
+        <label for="knowledgeBaseFile">Or Upload Knowledge Base File (JSON or CSV):</label><br>
+        <input type="file" id="knowledgeBaseFile" name="knowledge_base_file"><br><br>
+        
+        <button type="submit">Create Chatbot</button>
+      </form>
+      <pre id="createResult"></pre>
+    </div>
+
+    <!-- Update Form -->
+    <div id="updateFormDiv" class="hidden">
+      <h2>Update Chatbot</h2>
+      <form id="updateChatbotForm">
+        <input type="hidden" id="updateChatbotId" name="chatbot_id">
+        
+        <label for="updatePurpose">Purpose:</label><br>
+        <input type="text" id="updatePurpose" name="purpose"><br><br>
+        
+        <label for="updateGoal">Goal:</label><br>
+        <input type="text" id="updateGoal" name="goal"><br><br>
+        
+        <label for="updateRole">Role:</label><br>
+        <input type="text" id="updateRole" name="role"><br><br>
+        
+        <label for="updateConfiguration">Configuration (JSON):</label><br>
+        <textarea id="updateConfiguration" name="configuration" rows="4" cols="50">{ "custom_setting": "updated_value" }</textarea><br><br>
+        
+        <label for="updatePaymentPlan">Payment Plan:</label><br>
+        <select id="updatePaymentPlan" name="payment_plan">
+          <option value="free_trial">Free Trial</option>
+          <option value="basic">Basic</option>
+          <option value="pro">Pro</option>
+          <option value="enterprise">Enterprise</option>
+        </select><br><br>
+        
+        <label for="updateKnowledgeBase">Knowledge Base (Text - JSON format):</label><br>
+        <textarea id="updateKnowledgeBase" name="knowledge_base" rows="10" cols="50"></textarea><br><br>
+        
+        <button type="submit">Update Chatbot</button>
+      </form>
+      <pre id="updateResult"></pre>
+    </div>
+  </div>
+  
+  <script>
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    const company_id = user ? (user.company_id || user.id) : null;
+
+    // Set the companyId field in the create form
+    if(company_id) {
+      document.getElementById('companyId').value = company_id;
+    }
+
+    async function fetchChatbot() {
+      if (!company_id) {
+        document.getElementById('createResult').innerText = "Company ID not available. Please log in.";
+        return;
+      }
+      try {
+        const response = await fetch(`/api/admin/chatbots?client_id=${company_id}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          // A chatbot exists. Show update form.
+          document.getElementById('createFormDiv').classList.add('hidden');
+          document.getElementById('updateFormDiv').classList.remove('hidden');
+          // Populate update form fields using data from the first chatbot record.
+          const chatbot = data[0];
+          document.getElementById('updateChatbotId').value = chatbot.id;
+          document.getElementById('updatePurpose').value = chatbot.purpose || "";
+          document.getElementById('updateGoal').value = chatbot.goal || "";
+          document.getElementById('updateRole').value = chatbot.role || "";
+          document.getElementById('updateConfiguration').value = JSON.stringify(chatbot.configuration || {}, null, 2);
+          document.getElementById('updatePaymentPlan').value = chatbot.payment_plan || "free_trial";
+          document.getElementById('updateKnowledgeBase').value = JSON.stringify(chatbot.knowledge_base || {}, null, 2);
+        } else {
+          // No chatbot exists, show create form.
+          document.getElementById('createFormDiv').classList.remove('hidden');
+          document.getElementById('updateFormDiv').classList.add('hidden');
+        }
+      } catch (err) {
+        document.getElementById('createResult').innerText = "Error fetching chatbot: " + err;
+      }
+    }
+
+    document.getElementById('createChatbotForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const form = document.getElementById('createChatbotForm');
+      const formData = new FormData(form);
+      
+      try {
+        const response = await fetch('/api/admin/chatbots', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token },
+          body: formData
+        });
+        const data = await response.json();
+        document.getElementById('createResult').innerText = JSON.stringify(data, null, 2);
+        // Refresh form display after creation.
+        fetchChatbot();
+      } catch (err) {
+        document.getElementById('createResult').innerText = "Error: " + err;
+      }
+    });
+
+    document.getElementById('updateChatbotForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const chatbotId = document.getElementById('updateChatbotId').value;
+      const payload = {
+        purpose: document.getElementById('updatePurpose').value,
+        goal: document.getElementById('updateGoal').value,
+        role: document.getElementById('updateRole').value,
+        configuration: JSON.parse(document.getElementById('updateConfiguration').value),
+        payment_plan: document.getElementById('updatePaymentPlan').value,
+        knowledge_base: JSON.parse(document.getElementById('updateKnowledgeBase').value)
+      };
+      try {
+        const response = await fetch(`/api/admin/chatbots/${chatbotId}`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        document.getElementById('updateResult').innerText = JSON.stringify(data, null, 2);
+        fetchChatbot();
+      } catch (err) {
+        document.getElementById('updateResult').innerText = "Error: " + err;
+      }
+    });
+
+    // On page load, check if a chatbot exists for this company.
+    fetchChatbot();
+  </script>
+</body>
+</html>

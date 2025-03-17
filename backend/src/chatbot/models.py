@@ -1,5 +1,7 @@
 """
-Defines the SQLAlchemy models for chatbot configurations and interactions.
+Chatbot Models
+
+Defines the models for chatbot configuration, interactions, chat logs, and training data.
 """
 
 from datetime import datetime
@@ -8,28 +10,55 @@ from core.database import db
 
 class ChatbotConfig(db.Model):
     __tablename__ = 'chatbot_configs'
-    
     id = db.Column(db.Integer, primary_key=True)
-    client_id = db.Column(db.Integer, nullable=False)
-    configuration = db.Column(JSON, nullable=False)  # Stores all configuration settings
-    purpose = db.Column(db.String(255), nullable=True)  # e.g. "customer support", "sales"
-    goal = db.Column(db.String(255), nullable=True)     # e.g. "resolve queries", "generate leads"
-    role = db.Column(db.String(255), nullable=True)     # e.g. "assistant", "advisor"
+    company_id = db.Column(db.Integer, nullable=False)
+    # External chatbot identifier if needed.
+    chatbot_id = db.Column(db.String(64), nullable=True)
+    role = db.Column(db.String(255), nullable=True)
+    payment_plan = db.Column(db.String(50), nullable=True)
+    version = db.Column(db.Integer, default=1)
+    configuration = db.Column(JSON, nullable=True)
+    purpose = db.Column(db.String(255), nullable=True)
+    goal = db.Column(db.String(255), nullable=True)
     knowledge_base = db.Column(JSON, nullable=True)
-    trained_model = db.Column(db.LargeBinary, nullable=True)  # Storing pickled model
-    last_trained_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    trained_model = db.Column(db.LargeBinary, nullable=True)
+    last_trained_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return f"<ChatbotConfig id={self.id} client_id={self.client_id}>"
+        return f"<ChatbotConfig id={self.id} company_id={self.company_id}>"
 
 class ChatbotInteraction(db.Model):
     __tablename__ = 'chatbot_interactions'
-    
     id = db.Column(db.Integer, primary_key=True)
-    chatbot_id = db.Column(db.Integer, db.ForeignKey('chatbot_configs.id'), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    user_input = db.Column(db.Text, nullable=False)
-    bot_response = db.Column(db.Text, nullable=False)
+    company_id = db.Column(db.Integer, nullable=False)
+    chatbot_id = db.Column(db.Integer, nullable=False)
+    chat_id = db.Column(db.String(64), nullable=False)
+    messages = db.Column(JSON, nullable=True)  # List of messages (conversation log)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return f"<ChatbotInteraction chatbot_id={self.chatbot_id} timestamp={self.timestamp}>"
+        return f"<ChatbotInteraction chat_id={self.chat_id}>"
+
+class Chat(db.Model):
+    __tablename__ = 'chats'
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, nullable=False)
+    chatbot_id = db.Column(db.Integer, nullable=False)
+    chat_id = db.Column(db.String(64), nullable=False)
+    messages = db.Column(JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<Chat chat_id={self.chat_id}>"
+
+class Train(db.Model):
+    __tablename__ = 'train_data'
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, nullable=False)
+    chatbot_id = db.Column(db.Integer, nullable=False)
+    faqs = db.Column(JSON, nullable=True)    # FAQs used for training.
+    queries = db.Column(JSON, nullable=True) # Past queries for analysis.
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<TrainData chatbot_id={self.chatbot_id}>"

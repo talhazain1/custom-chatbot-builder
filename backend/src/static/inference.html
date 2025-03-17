@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test Chatbot</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <style>
+    .container { max-width: 800px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 5px; }
+    h1 { margin-top: 0; }
+    form label { display: block; margin-top: 10px; }
+    form input, form textarea { width: 100%; padding: 8px; margin-top: 5px; }
+    form button { margin-top: 15px; }
+    pre { background: #e9ecef; padding: 10px; border-radius: 4px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="chatbot_builder.html">Chatbot Builder</a></li>
+      <li><a href="inference.html">Test Chatbot</a></li>
+    </ul>
+  </nav>
+  
+  <div class="container">
+    <h1>Test Chatbot Inference</h1>
+    <form id="chatbotTestForm">
+      <label for="chatbot_id">Chatbot ID:</label>
+      <input type="number" id="chatbot_id" name="chatbot_id" required>
+      <br>
+      <label for="query">Your Query:</label>
+      <textarea id="query" name="query" rows="3" required></textarea>
+      <br>
+      <button type="submit">Get Response</button>
+    </form>
+    <h2>Chatbot Response:</h2>
+    <pre id="chatbotResponse"></pre>
+  </div>
+  
+  <script>
+    document.getElementById('chatbotTestForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const chatbotId = document.getElementById('chatbot_id').value;
+      const query = document.getElementById('query').value;
+      try {
+        const response = await fetch('/api/chatbot/inference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chatbot_id: chatbotId, query: query })
+        });
+        const data = await response.json();
+        document.getElementById('chatbotResponse').innerText = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById('chatbotResponse').innerText = "Error: " + err;
+      }
+    });
+  </script>
+</body>
+</html>

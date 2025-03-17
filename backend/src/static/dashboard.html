@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Company Dashboard</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <style>
+    .dashboard-container { max-width: 800px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 5px; }
+    .company-logo { max-width: 150px; }
+    .info-section { margin-bottom: 20px; }
+    .info-section h2 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+    .edit-form label { display: block; margin-top: 10px; }
+    .edit-form input, .edit-form textarea { width: 100%; padding: 8px; margin-top: 5px; }
+    .edit-form button { margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="register.html">Register</a></li>
+      <li><a href="login.html">Login</a></li>
+      <li><a href="profile.html">Profile</a></li>
+      <li><a href="chatbot_builder.html">Chatbot Builder</a></li>
+      <li><a href="admin.html">Admin</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="inference.html">Test Chatbot</a></li>
+    </ul>
+  </nav>
+  <div class="dashboard-container">
+      <h1>Company Dashboard</h1>
+      <div id="dashboardDisplay"></div>
+      
+      <h2>Edit Profile</h2>
+      <form id="updateProfileForm" class="edit-form">
+          <label for="user_name">Name:</label>
+          <input type="text" id="user_name" name="user_name">
+          
+          <label for="user_phone">Phone:</label>
+          <input type="text" id="user_phone" name="user_phone">
+          
+          <label for="company_name">Company Name:</label>
+          <input type="text" id="company_name" name="company_name">
+          
+          <label for="company_phone">Company Phone:</label>
+          <input type="text" id="company_phone" name="company_phone">
+          
+          <label for="business_address">Business Address:</label>
+          <textarea id="business_address" name="business_address"></textarea>
+          
+          <label for="company_website">Company Website:</label>
+          <input type="text" id="company_website" name="company_website">
+          
+          <label for="company_logo">Company Logo URL:</label>
+          <input type="text" id="company_logo" name="company_logo">
+          
+          <label for="niche">Niche:</label>
+          <input type="text" id="niche" name="niche">
+          
+          <button type="submit">Update Profile</button>
+      </form>
+      <pre id="updateResult"></pre>
+  </div>
+  <script>
+    // Retrieve the user object from localStorage.
+    const storedUser = localStorage.getItem('user');
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    // Use company_id from the user object; if not present, fallback to user.id.
+    const company_id = user ? (user.company_id || user.id) : null;
+    const token = localStorage.getItem('token');
+  
+    async function fetchDashboard() {
+      if (!company_id) {
+        document.getElementById("dashboardDisplay").innerText = "Company ID not available.";
+        return;
+      }
+      try {
+        const response = await fetch(`/api/admin/dashboard?company_id=${company_id}`);
+        const data = await response.json();
+        displayDashboard(data);
+        populateForm(data);
+      } catch (error) {
+        document.getElementById("dashboardDisplay").innerText = "Error loading dashboard: " + error;
+      }
+    }
+  
+    function displayDashboard(data) {
+      const contact = data.contact_details || {};
+      const displayDiv = document.getElementById("dashboardDisplay");
+      displayDiv.innerHTML = `
+        <div class="info-section">
+          <h2>Company Information</h2>
+          <img src="${data.company_logo || 'placeholder_logo.png'}" alt="Company Logo" class="company-logo"><br>
+          <strong>Name:</strong> ${data.company_name || 'N/A'}<br>
+          <strong>Business Email:</strong> ${data.business_email || 'N/A'}<br>
+          <strong>Contact Phone:</strong> ${contact.phone || 'N/A'}<br>
+          <strong>Company Phone:</strong> ${contact.company_phone || 'N/A'}<br>
+          <strong>Address:</strong> ${contact.business_address || 'N/A'}<br>
+        </div>
+        <div class="info-section">
+          <h2>Subscription Details</h2>
+          <strong>Plan:</strong> ${data.subscription_plan || 'N/A'}<br>
+          <strong>Payment Expiry Date:</strong> ${data.payment_expiry_date || 'N/A'}<br>
+        </div>
+      `;
+    }
+  
+    function populateForm(data) {
+      document.getElementById('user_name').value = data.user_name || "";
+      document.getElementById('user_phone').value = (data.contact_details && data.contact_details.phone) || "";
+      document.getElementById('company_name').value = data.company_name || "";
+      document.getElementById('company_phone').value = (data.contact_details && data.contact_details.company_phone) || "";
+      document.getElementById('business_address').value = (data.contact_details && data.contact_details.business_address) || "";
+      document.getElementById('company_website').value = ""; // if available
+      document.getElementById('company_logo').value = data.company_logo || "";
+      document.getElementById('niche').value = ""; // if available
+    }
+  
+    document.getElementById('updateProfileForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const payload = {
+        user_name: document.getElementById('user_name').value,
+        user_phone: document.getElementById('user_phone').value,
+        company_name: document.getElementById('company_name').value,
+        company_phone: document.getElementById('company_phone').value,
+        business_address: document.getElementById('business_address').value,
+        company_website: document.getElementById('company_website').value,
+        company_logo: document.getElementById('company_logo').value,
+        niche: document.getElementById('niche').value,
+      };
+      try {
+        const response = await fetch('/api/users/update_profile', {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        document.getElementById('updateResult').innerText = JSON.stringify(data, null, 2);
+        // Update localStorage with latest profile data
+        if(data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
+        fetchDashboard();
+      } catch (err) {
+        document.getElementById('updateResult').innerText = err;
+      }
+    });
+  
+    fetchDashboard();
+  </script>   
+</body>
+</html>

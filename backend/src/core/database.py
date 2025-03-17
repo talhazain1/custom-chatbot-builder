@@ -1,8 +1,8 @@
 """
-database.py
+Database Module
 
-This module initializes the PostgreSQL database connection using Flask-SQLAlchemy.
-It reads configuration from environment variables and sets up connection pooling options.
+Initializes the SQLAlchemy database with production-level connection pooling.
+Configuration is loaded from environment variables.
 """
 
 import os
@@ -11,15 +11,6 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 def init_db(app):
-    """
-    Initialize the database with the Flask application.
-    
-    The configuration is read from environment variables:
-      - DATABASE_URL: PostgreSQL connection URL.
-      - POOL_SIZE, MAX_OVERFLOW, POOL_TIMEOUT, POOL_RECYCLE: Connection pooling options.
-    
-    This setup is intended for production use.
-    """
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
         'DATABASE_URL', 'postgresql://user:password@localhost:5432/chatbotdb'
     )

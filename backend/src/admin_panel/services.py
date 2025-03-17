@@ -1,60 +1,64 @@
 """
-Business logic for managing chatbot configurations.
-Handles CRUD operations, re-training, and conversion to dictionary format.
+Admin Panel Services
+
+Provides business logic for managing chatbot configurations.
+Handles CRUD operations, knowledge base merging, re-training, and conversion to dictionary format.
 """
 
-import json
 from chatbot.models import ChatbotConfig
 from core.database import db
-from chatbot import builder, model_training, data_processing
+from chatbot import model_training, data_processing
 
 def chatbot_to_dict(chatbot: ChatbotConfig) -> dict:
-    """Converts a ChatbotConfig SQLAlchemy object to a dictionary."""
     return {
         "id": chatbot.id,
-        "client_id": chatbot.client_id,
+        "company_id": chatbot.company_id,
         "configuration": chatbot.configuration,
         "purpose": chatbot.purpose,
         "goal": chatbot.goal,
         "role": chatbot.role,
+        "payment_plan": chatbot.payment_plan,
+        "version": chatbot.version,
         "knowledge_base": chatbot.knowledge_base,
         "last_trained_at": chatbot.last_trained_at.isoformat() if chatbot.last_trained_at else None,
     }
 
 def get_all_chatbots(client_id: int = None):
-    """Retrieve all chatbots; optionally filter by client_id."""
     if client_id:
-        return ChatbotConfig.query.filter_by(client_id=client_id).all()
+        return ChatbotConfig.query.filter_by(company_id=client_id).all()
     return ChatbotConfig.query.all()
 
 def get_chatbot_by_id(chatbot_id: int):
-    """Retrieve a specific chatbot by ID."""
     return ChatbotConfig.query.get(chatbot_id)
 
 def create_chatbot(data: dict) -> ChatbotConfig:
-    """
-    Create a new chatbot configuration.
-    Expected keys in data: client_id, configuration, purpose, goal, role, and optionally knowledge_base.
-    If a knowledge base is provided, it will be preprocessed and used to train the model.
-    """
     try:
-        client_id = data.get("client_id")
+        company_id = data.get("company_id")
+        if not company_id:
+            raise Exception("Company ID is required.")
+
+        # Check if a chatbot already exists for this company.
+        existing = ChatbotConfig.query.filter_by(company_id=company_id).first()
+        if existing:
+            raise Exception("A chatbot already exists for this company. Only one chatbot is allowed per company.")
+
         configuration = data.get("configuration", {})
         purpose = data.get("purpose")
         goal = data.get("goal")
         role = data.get("role")
+        payment_plan = data.get("payment_plan", "free_trial")
         knowledge_base = data.get("knowledge_base", {})
 
-        # Preprocess the knowledge base if provided and train the model.
         processed_kb = data_processing.preprocess_knowledge_base(knowledge_base) if knowledge_base else {}
         trained_model = model_training.train_model(processed_kb, configuration) if processed_kb else None
 
         chatbot = ChatbotConfig(
-            client_id=client_id,
+            company_id=company_id,
             configuration=configuration,
             purpose=purpose,
             goal=goal,
             role=role,
+            payment_plan=payment_plan,
             knowledge_base=processed_kb,
             trained_model=trained_model
         )
@@ -65,11 +69,8 @@ def create_chatbot(data: dict) -> ChatbotConfig:
         db.session.rollback()
         raise Exception(f"Error creating chatbot: {e}")
 
+
 def update_chatbot_config(chatbot_id: int, data: dict) -> ChatbotConfig:
-    """
-    Update an existing chatbot configuration.
-    Allows updating dynamic fields as well as the static configuration.
-    """
     chatbot = get_chatbot_by_id(chatbot_id)
     if not chatbot:
         return None
@@ -79,13 +80,20 @@ def update_chatbot_config(chatbot_id: int, data: dict) -> ChatbotConfig:
         chatbot.purpose = data.get("purpose", chatbot.purpose)
         chatbot.goal = data.get("goal", chatbot.goal)
         chatbot.role = data.get("role", chatbot.role)
+        chatbot.payment_plan = data.get("payment_plan", chatbot.payment_plan)
 
-        # Optionally update knowledge base and re-train if new knowledge base is provided.
         new_kb = data.get("knowledge_base")
         if new_kb:
-            processed_kb = data_processing.preprocess_knowledge_base(new_kb)
-            chatbot.knowledge_base = processed_kb
-            chatbot.trained_model = model_training.train_model(processed_kb, chatbot.configuration)
+            processed_new_kb = data_processing.preprocess_knowledge_base(new_kb)
+            if chatbot.knowledge_base and isinstance(chatbot.knowledge_base, dict):
+                existing_faqs = chatbot.knowledge_base.get("faqs", [])
+                new_faqs = processed_new_kb.get("faqs", [])
+                merged_faqs = existing_faqs + new_faqs
+                chatbot.knowledge_base["faqs"] = merged_faqs
+            else:
+                chatbot.knowledge_base = processed_new_kb
+
+            chatbot.trained_model = model_training.train_model(chatbot.knowledge_base, chatbot.configuration)
         
         db.session.commit()
         return chatbot
@@ -94,7 +102,6 @@ def update_chatbot_config(chatbot_id: int, data: dict) -> ChatbotConfig:
         raise Exception(f"Error updating chatbot: {e}")
 
 def delete_chatbot(chatbot_id: int) -> bool:
-    """Delete a chatbot configuration."""
     chatbot = get_chatbot_by_id(chatbot_id)
     if not chatbot:
         return False
@@ -107,22 +114,17 @@ def delete_chatbot(chatbot_id: int) -> bool:
         raise Exception(f"Error deleting chatbot: {e}")
 
 def retrain_chatbot(chatbot_id: int, new_knowledge_base: dict, new_config: dict = None) -> ChatbotConfig:
-    """
-    Re-train the chatbot with a new knowledge base and/or new configuration.
-    The new configuration (if provided) will override existing settings.
-    """
     chatbot = get_chatbot_by_id(chatbot_id)
     if not chatbot:
         return None
     try:
-        # Update configuration if new settings are provided
         if new_config:
-            chatbot.configuration.update(new_config)
+            chatbot.configuration = new_config
             chatbot.purpose = new_config.get("purpose", chatbot.purpose)
             chatbot.goal = new_config.get("goal", chatbot.goal)
             chatbot.role = new_config.get("role", chatbot.role)
+            chatbot.payment_plan = new_config.get("payment_plan", chatbot.payment_plan)
         
-        # Preprocess and train model with new knowledge base
         processed_kb = data_processing.preprocess_knowledge_base(new_knowledge_base)
         chatbot.knowledge_base = processed_kb
         chatbot.trained_model = model_training.train_model(processed_kb, chatbot.configuration)

@@ -1,27 +1,38 @@
 """
-Generates aggregated analytics and reports for the admin panel.
-Provides insights on total chatbots, interactions, and other key metrics.
+Dashboard Module
+
+Generates a dashboard report for a company.
+Includes company logo, company name, business email, contact details,
+subscription plan, and payment expiry date.
+Assumes that the User model holds company details.
 """
 
-from chatbot.models import ChatbotConfig, ChatbotInteraction
+from users.models import User
+from chatbot.models import ChatbotConfig
 
-def generate_report() -> dict:
-    """
-    Aggregates key statistics from the database.
-    
-    Returns:
-        dict: Aggregated data including total chatbots, interactions, and a sample breakdown.
-    """
+def generate_dashboard(company_id: int) -> dict:
     try:
-        total_chatbots = ChatbotConfig.query.count()
-        total_interactions = ChatbotInteraction.query.count()
+        from users.models import User
+        # Query using company_id or fallback to user id.
+        user = User.query.filter((User.company_id == company_id) | (User.id == company_id)).first()
+        if not user:
+            raise Exception("Company/user not found")
+        
+        payment_expiry = "2025-12-31" if user.subscription_plan != "free_trial" else None
 
-        # For more detailed analytics, you can add per-client breakdowns, usage trends, etc.
-        report = {
-            "total_chatbots": total_chatbots,
-            "total_interactions": total_interactions,
-            "sample_report": "Further metrics can be added here"
+        dashboard_data = {
+            "user_name": user.user_name or "",
+            "company_logo": user.company_logo or "",
+            "company_name": user.company_name or "",
+            "business_email": user.user_email or "",
+            "contact_details": {
+                "phone": user.user_phone or "",
+                "company_phone": user.company_phone or "",
+                "business_address": user.business_address or ""
+            },
+            "subscription_plan": user.subscription_plan or "",
+            "payment_expiry_date": payment_expiry or ""
         }
-        return report
+        return dashboard_data
     except Exception as e:
-        raise Exception(f"Error generating dashboard report: {e}")
+        raise Exception(f"Error generating dashboard: {e}")
